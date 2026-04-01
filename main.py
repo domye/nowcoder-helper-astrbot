@@ -51,7 +51,8 @@ def article_to_markdown(article: Article) -> str:
 class NowcoderHelperPlugin(Star):
     def __init__(self, context: Context):
         super().__init__(context)
-        self.data_path = get_astrbot_data_path() / "plugin_data" / "nowcoder_helper"
+        # get_astrbot_data_path() 返回字符串，需要用 Path 包装
+        self.data_path = Path(get_astrbot_data_path()) / "plugin_data" / "nowcoder_helper"
         self.sessions_file = self.data_path / "sessions.json"
         self._ensure_data_dir()
 
