@@ -91,7 +91,8 @@ async def handle_search(event: AstrMessageEvent, message: str, session_manager: 
         yield event.plain_result(response)
 
         # 启动会话等待
-        await handle_search_session(event, sender_id, session_manager)
+        async for result in handle_search_session(event, sender_id, session_manager):
+            yield result
 
     except Exception as e:
         logger.error(f"Search failed: {e}")
