@@ -3,7 +3,7 @@
 """
 from astrbot.api.event import AstrMessageEvent
 from astrbot.api import logger
-from services import fetch_article, build_article_message, RE_NOWCODER_URL
+from ..services import fetch_article, build_article_message, RE_NOWCODER_URL
 
 
 async def handle_article_url(event: AstrMessageEvent, url: str):

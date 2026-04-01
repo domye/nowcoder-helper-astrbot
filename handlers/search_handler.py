@@ -4,13 +4,13 @@
 from astrbot.api.event import AstrMessageEvent
 from astrbot.api import logger
 from astrbot.core.utils.session_waiter import session_waiter, SessionController
-from services import (
+from ..services import (
     fetch_search_results, fetch_article, build_article_message,
     format_search_results, format_help_message,
     SEARCH_TAG_IDS, SEARCH_ORDER_TYPES,
     SessionManager, SearchSession
 )
-from handlers.article_handler import extract_url_from_message
+from .article_handler import extract_url_from_message
 
 
 def parse_search_params(message: str) -> tuple:
@@ -49,7 +49,7 @@ async def handle_search(event: AstrMessageEvent, message: str, session_manager: 
     # 检测是否为链接
     url = extract_url_from_message(message)
     if url:
-        from handlers.article_handler import handle_article_url
+        from .article_handler import handle_article_url
         async for result in handle_article_url(event, url):
             yield result
         return

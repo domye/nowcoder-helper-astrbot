@@ -8,8 +8,8 @@ from astrbot.api.star import Context, Star, register
 from astrbot.api import logger
 from astrbot.core.utils.astrbot_path import get_astrbot_data_path
 
-from services import SessionManager, close_session
-from handlers import handle_search
+from .services import SessionManager, close_session
+from .handlers import handle_search
 
 
 @register("nowcoder_helper", "domye", "智能获取牛客文章", "1.0.0")
