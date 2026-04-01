@@ -31,15 +31,43 @@ def format_article_text(article: Article) -> str:
     return ''.join(lines)
 
 
+def extract_images_from_content(content: str) -> list:
+    """从 Markdown 内容中提取图片链接"""
+    import re
+    # 匹配 Markdown 图片格式 ![alt](url)
+    pattern = re.compile(r'!\[.*?\]\((https?://[^)]+)\)')
+    return pattern.findall(content)
+
+
+def remove_images_from_content(content: str) -> str:
+    """从 Markdown 内容中移除图片链接"""
+    import re
+    # 移除 Markdown 图片格式 ![alt](url)
+    pattern = re.compile(r'!\[.*?\]\(https?://[^)]+\)\n?')
+    return pattern.sub('', content)
+
+
 def build_article_message(article: Article):
     """构建文章消息（包含图片则发送图片）"""
-    text = format_article_text(article)
+    # 从 feed_images 和 content 中提取所有图片
+    all_images = list(article.feed_images or [])
+    content_images = extract_images_from_content(article.content or '')
 
-    if not article.feed_images:
+    # 合并图片列表（去重）
+    for img_url in content_images:
+        if img_url not in all_images:
+            all_images.append(img_url)
+
+    # 移除 content 中的图片 Markdown 链接
+    clean_content = remove_images_from_content(article.content or '无内容')
+    text = f"{article.title or '无标题'}\n\n{clean_content}"
+
+    if not all_images:
         return text, []
 
+    # 构建消息链：文本 + 图片
     chain = [Comp.Plain(text), Comp.Plain("\n")]
-    for img_url in article.feed_images:
+    for img_url in all_images:
         chain.append(Comp.Image.fromURL(img_url))
 
     return None, chain
