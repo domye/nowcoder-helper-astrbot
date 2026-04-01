@@ -6,8 +6,8 @@ import re
 import time
 import random
 from urllib.parse import quote
-from parser import parse_feed_html, parse_discuss_api_data, parse_url_type, parse_search_html, parse_search_api_data
-from models import Article, SearchResult
+from .parser import parse_feed_html, parse_discuss_api_data, parse_url_type, parse_search_html, parse_search_api_data
+from .models import Article, SearchResult
 
 
 # 延迟配置（秒）

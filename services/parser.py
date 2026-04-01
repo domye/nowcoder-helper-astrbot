@@ -4,7 +4,7 @@ HTML解析和数据提取
 import re
 import json
 from html.parser import HTMLParser
-from models import Article, SearchResultItem, SearchResult
+from .models import Article, SearchResultItem, SearchResult
 from urllib.parse import unquote
 
 

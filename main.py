@@ -6,16 +6,8 @@ from astrbot.api.event import filter, AstrMessageEvent, MessageEventResult
 from astrbot.api.star import Context, Star, register
 from astrbot.api import logger
 
-import sys
-import os
-
-# 添加插件目录到 Python 路径
-plugin_dir = os.path.dirname(os.path.abspath(__file__))
-if plugin_dir not in sys.path:
-    sys.path.insert(0, plugin_dir)
-
-from services.api_client import fetch_article, fetch_search_results
-from services.models import Article
+from .services.api_client import fetch_article, fetch_search_results
+from .services.models import Article
 
 
 def article_to_markdown(article: Article) -> str:
