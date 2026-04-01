@@ -10,41 +10,54 @@ from astrbot.api.star import Context, Star, register
 from astrbot.api import logger
 from astrbot.core.utils.session_waiter import session_waiter, SessionController
 from astrbot.core.utils.astrbot_path import get_astrbot_data_path
+import astrbot.api.message_components as Comp
 
 from .services.api_client_async import fetch_article, fetch_search_results
 from .services.models import Article, SearchResult
 
 
-def article_to_markdown(article: Article) -> str:
-    """将文章转换为 Markdown 格式"""
+def format_article_text(article: Article) -> str:
+    """将文章转换为简洁的文本格式（不含图片）"""
     lines = [
-        f"# {article.title or '无标题'}\n\n",
-        f"**作者**: {article.author or '未知'}\n",
+        f"📄 {article.title or '无标题'}\n\n",
+        f"👤 {article.author or '未知'}",
     ]
     if article.identity:
-        lines.append(f"**身份**: {article.identity}\n")
+        lines.append(f" | {article.identity}")
     if article.post_time:
-        lines.append(f"**时间**: {article.post_time}\n")
-    lines.append(f"**链接**: {article.url}\n\n")
+        lines.append(f"\n🕐 {article.post_time}")
+    lines.append(f"\n🔗 {article.url}")
 
     stats = []
     if article.view_count:
-        stats.append(f"浏览 {article.view_count}")
+        stats.append(f"👁 {article.view_count}")
     if article.like_count:
-        stats.append(f"点赞 {article.like_count}")
+        stats.append(f"👍 {article.like_count}")
     if article.comment_count:
-        stats.append(f"评论 {article.comment_count}")
+        stats.append(f"💬 {article.comment_count}")
     if stats:
-        lines.append(f"**统计**: {' | '.join(stats)}\n\n")
+        lines.append(f"\n{' '.join(stats)}")
 
-    lines.append("---\n\n")
+    lines.append("\n\n" + "─" * 20 + "\n\n")
     lines.append(article.content or '无内容')
 
-    if article.feed_images:
-        lines.append('\n\n---\n\n**图片**:\n\n')
-        lines.append('\n'.join(f'![图片]({u})' for u in article.feed_images))
-
     return ''.join(lines)
+
+
+def build_article_message(article: Article):
+    """构建文章消息（包含图片则发送图片）"""
+    text = format_article_text(article)
+
+    if not article.feed_images:
+        return text, []
+
+    # 有图片时构建消息链
+    chain = [Comp.Plain(text), Comp.Plain("\n\n📎 图片:")]
+    for img_url in article.feed_images:
+        chain.append(Comp.Plain("\n"))
+        chain.append(Comp.Image.fromURL(img_url))
+
+    return None, chain
 
 
 @register("nowcoder_helper", "domye", "交互式获取牛客文章", "1.0.0")
@@ -138,8 +151,11 @@ class NowcoderHelperPlugin(Star):
                 try:
                     await ev.send(ev.plain_result("正在获取文章..."))
                     article = await fetch_article(msg)
-                    markdown = article_to_markdown(article)
-                    await ev.send(ev.plain_result(markdown))
+                    text, chain = build_article_message(article)
+                    if chain:
+                        await ev.send(ev.chain_result(chain))
+                    else:
+                        await ev.send(ev.plain_result(text))
                 except ValueError:
                     await ev.send(ev.plain_result("无效的URL格式，请发送正确的牛客文章链接"))
                     controller.keep(timeout=60, reset_timeout=True)
@@ -257,8 +273,11 @@ class NowcoderHelperPlugin(Star):
                     item = result.items[index - 1]
                     await ev.send(ev.plain_result("正在获取文章..."))
                     article = await fetch_article(item.to_url())
-                    markdown = article_to_markdown(article)
-                    await ev.send(ev.plain_result(markdown))
+                    text, chain = build_article_message(article)
+                    if chain:
+                        await ev.send(ev.chain_result(chain))
+                    else:
+                        await ev.send(ev.plain_result(text))
 
                     # 清理会话状态
                     if sender_id in sessions:
