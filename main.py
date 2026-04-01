@@ -323,7 +323,7 @@ class NowcoderHelperPlugin(Star):
                         await ev.send(ev.plain_result(text))
 
                     # 显示提示，继续会话
-                    await ev.send(ev.plain_result("\n输入'返回'继续查看其他文章，或'退出'结束"))
+                    await ev.send(ev.plain_result("输入'返回'继续查看其他文章，或'退出'结束"))
                     controller.keep(timeout=60, reset_timeout=True)
                 except ValueError:
                     # 检查是否是新的搜索命令
