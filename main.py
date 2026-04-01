@@ -69,10 +69,9 @@ def build_message_chain_from_markdown(content: str):
 
 def build_article_message(article: Article):
     """构建文章消息"""
-    title = article.title or '无标题'
-
     # Feed 类型：过滤 content 中的表情包，只保留 feed_images（末尾的真正图片）
     if article.article_type == 'feed':
+        title = article.title or '无标题'
         clean_content = remove_images_from_content(article.content or '无内容')
         text = f"{title}\n\n{clean_content}"
         images = article.feed_images or []
@@ -86,7 +85,8 @@ def build_article_message(article: Article):
             chain.append(Comp.Image.fromURL(img_url))
         return None, chain
 
-    # Discuss 类型：保留图片在文字中的原始位置
+    # Discuss 类型：有标题，保留图片在文字中的原始位置
+    title = article.title or '无标题'
     content = article.content or '无内容'
     full_content = f"{title}\n\n{content}"
 
@@ -94,7 +94,7 @@ def build_article_message(article: Article):
     chain = build_message_chain_from_markdown(full_content)
 
     if not chain:
-        return full_content, []
+        return content, []
 
     return None, chain
 
