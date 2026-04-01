@@ -254,6 +254,17 @@ class NowcoderHelperPlugin(Star):
                 log_id = session_data.get("log_id")
                 session_id = session_data.get("session_id")
 
+                # 返回搜索结果
+                if user_msg in ("返回", "back"):
+                    try:
+                        result = await fetch_search_results(keyword, page=current_page, log_id=log_id, session_id=session_id, tag_type=tag_type, order=order)
+                        await ev.send(ev.plain_result(self._format_search_results(result, keyword, current_page, tag_type, order)))
+                        controller.keep(timeout=60, reset_timeout=True)
+                    except Exception as e:
+                        await ev.send(ev.plain_result(f"返回失败: {e}"))
+                        controller.keep(timeout=60, reset_timeout=True)
+                    return
+
                 # 翻页
                 if user_msg in ("下一页", "next"):
                     if current_page >= total_pages:
@@ -311,13 +322,26 @@ class NowcoderHelperPlugin(Star):
                     else:
                         await ev.send(ev.plain_result(text))
 
+                    # 显示提示，继续会话
+                    await ev.send(ev.plain_result("\n输入'返回'继续查看其他文章，或'退出'结束"))
+                    controller.keep(timeout=60, reset_timeout=True)
+                except ValueError:
+                    # 检查是否是新的搜索命令
+                    if user_msg.startswith('牛客'):
+                        # 退出当前会话，让外层命令处理器处理新搜索
+                        if sender_id in sessions:
+                            del sessions[sender_id]
+                            self._save_sessions(sessions)
+                        await ev.send(ev.plain_result("已退出，开始新搜索..."))
+                        controller.stop()
+                        return
+
+                    # 不符合格式的输入，自动退出
+                    await ev.send(ev.plain_result("输入无效，已自动退出搜索"))
                     if sender_id in sessions:
                         del sessions[sender_id]
                         self._save_sessions(sessions)
                     controller.stop()
-                except ValueError:
-                    await ev.send(ev.plain_result("请输入编号、'下一页'、'上一页'或'退出'"))
-                    controller.keep(timeout=60, reset_timeout=True)
                 except Exception as e:
                     await ev.send(ev.plain_result(f"获取失败: {e}"))
                     controller.keep(timeout=60, reset_timeout=True)
