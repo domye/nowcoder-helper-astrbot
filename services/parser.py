@@ -158,27 +158,34 @@ def parse_discuss_api_data(data: dict, article_id: str) -> dict:
 
 def parse_search_html(html: str, keyword: str, page: int) -> SearchResult:
     """从搜索页面HTML提取结果"""
+    import logging
     items = []
 
     # 提取feed文章
     for uuid in set(RE_URL_FEED.findall(html)):
         title_m = re.search(rf'/feed/main/detail/{uuid}[^>]*>([^<]+)<', html)
+        title = title_m.group(1).strip() if title_m else f'Feed-{uuid[:8]}'
         items.append(SearchResultItem(
-            id=uuid, title=(title_m.group(1).strip() if title_m else f'Feed-{uuid[:8]}'),
+            id=uuid, title=title,
             url='', article_type='feed'
         ))
+        logging.warning(f"DEBUG HTML Feed: uuid={uuid}, title={title}")
 
     # 提取discuss文章
     for aid in set(RE_URL_DISCUSS.findall(html)):
         title_m = re.search(rf'/discuss/{aid}[^>]*>([^<]+)<', html)
+        title = title_m.group(1).strip() if title_m else f'Discuss-{aid}'
         items.append(SearchResultItem(
-            id=aid, title=(title_m.group(1).strip() if title_m else f'Discuss-{aid}'),
+            id=aid, title=title,
             url='', article_type='discuss'
         ))
+        logging.warning(f"DEBUG HTML Discuss: aid={aid}, title={title}")
 
     # 总页数
     pager_m = RE_PAGER.search(html)
     pages = max(map(int, RE_PAGE_NUM.findall(pager_m.group(0))), default=0) if pager_m else 0
+
+    logging.warning(f"DEBUG HTML Total items: {len(items)}")
 
     return SearchResult(keyword=unquote(keyword), page=page, items=items, total_pages=pages)
 
