@@ -1,6 +1,6 @@
 name: nowcoder_helper # 插件唯一识别名
 display_name: 牛客文章助手 # 用于展示的名字
 desc: 获取牛客文章并以 Markdown 格式返回 # 插件简短描述
-version: v1.0.0 # 插件版本号
+version: v1.0.1 # 插件版本号
 author: domye # 作者
 repo: https://github.com/domye/nowcoder-helper-astrbot # 插件的仓库地址
