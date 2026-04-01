@@ -203,42 +203,33 @@ def parse_search_api_data(data: dict, keyword: str, page: int) -> SearchResult:
         if not isinstance(rd, dict):
             continue
 
-        # 调试：输出第二条记录的完整数据结构
-        if idx == 1:  # 第二条记录
-            logger.info(f"\n=== API Record 1 ===")
-            logger.info(f"Record keys: {list(rd.keys())}")
-            logger.info(f"Record data: {rd}")
-
-        # 按优先级提取数据，确保每个候选都是字典
-        candidates = [rd.get('momentData'), rd.get('subjectData'), rd.get('contentData')]
-        src = next((c for c in candidates if isinstance(c, dict) and c), None)
-        if not src:
+        # 优先使用 contentData，它包含正确的ID
+        content_data = rd.get('contentData')
+        if not isinstance(content_data, dict):
             continue
 
-        if idx == 1:
-            logger.info(f"Selected src keys: {list(src.keys())}")
-            logger.info(f"Selected src: {src}")
+        # 根据 contentType 判断文章类型
+        content_type = rd.get('contentType', 0)
+        # contentType: 250 是 discuss，其他是 feed
+        if content_type == 250:
+            # discuss 类型：使用 contentData.id（纯数字）
+            item_id = content_data.get('id')
+            article_type = 'discuss'
+        else:
+            # feed 类型：使用 contentData.uuid（十六进制）
+            item_id = content_data.get('uuid')
+            article_type = 'feed'
 
-        # 尝试多个可能的ID字段
-        possible_ids = [
-            src.get('subjectId'),
-            src.get('discussId'),
-            src.get('uuid'),
-            str(src.get('id', '')),
-            str(rd.get('contentId', '')),
-        ]
-
-        # 过滤掉空值，取第一个有效的
-        item_id = next((id for id in possible_ids if id), None)
         if not item_id:
-            logger.info(f"No valid ID found in record: {list(rd.keys())}")
             continue
 
-        # 判断文章类型：feed 的 id 包含字母（十六进制），discuss 的 id 是纯数字
-        article_type = 'discuss' if str(item_id).isdigit() else 'feed'
+        title = content_data.get('title') or f'文章-{str(item_id)[:8]}'
+
+        if idx < 3:  # 输出前3条用于调试
+            logger.info(f"API Item {idx}: id={item_id}, type={article_type}, contentType={content_type}, title={title}")
 
         items.append(SearchResultItem(
-            id=str(item_id), title=src.get('title') or f'文章-{item_id[:8]}',
+            id=str(item_id), title=title,
             url='', article_type=article_type
         ))
 
