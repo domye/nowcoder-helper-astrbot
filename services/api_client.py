@@ -158,12 +158,13 @@ async def fetch_search_results(keyword: str, page: int = 1, log_id: str = None, 
         html, _ = await _request(session, 'GET', url, headers={'Accept': 'text/html'})
         result = parse_search_html(html, keyword, page)
 
-        # 调试：输出第一条和第二条搜索结果的HTML片段
-        print(f"\n=== DEBUG Search Results ===")
-        print(f"Total items parsed: {len(result.items)}")
+        # 调试：输出第一条和第二条搜索结果
+        from astrbot.api import logger
+        logger.info(f"\n=== Search Results ===")
+        logger.info(f"Total items parsed: {len(result.items)}")
         if len(result.items) >= 2:
-            print(f"Item 1: id={result.items[0].id}, type={result.items[0].article_type}, title={result.items[0].title}")
-            print(f"Item 2: id={result.items[1].id}, type={result.items[1].article_type}, title={result.items[1].title}")
+            logger.info(f"Item 1: id={result.items[0].id}, type={result.items[0].article_type}, title={result.items[0].title}")
+            logger.info(f"Item 2: id={result.items[1].id}, type={result.items[1].article_type}, title={result.items[1].title}")
 
         match = RE_INITIAL_STATE.search(html)
         if match:
@@ -191,10 +192,11 @@ async def fetch_search_results(keyword: str, page: int = 1, log_id: str = None, 
         _check_api_response(data)
 
         # 调试：输出API响应的前两条记录
+        from astrbot.api import logger
         records = data.get('data', {}).get('records', [])
         if len(records) > 1:
-            print(f"\n=== DEBUG API Response Record 1 ===")
-            print(f"Full record: {records[1]}")
+            logger.info(f"\n=== API Response Record 1 ===")
+            logger.info(f"Full record: {records[1]}")
 
         saved_log_id, saved_session_id = result.log_id, result.session_id
         result = parse_search_api_data(data, keyword, page)
