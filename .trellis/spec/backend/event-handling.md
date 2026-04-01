@@ -463,6 +463,101 @@ async def important_cmd(self, event: AstrMessageEvent):
 
 ---
 
+## Session Control (Multi-turn Dialogue)
+
+AstrBot provides `session_waiter` for multi-turn conversations with automatic user isolation.
+
+### Basic Session Pattern
+
+```python
+from astrbot.core.utils.session_waiter import session_waiter, SessionController
+
+@filter.command("game")
+async def start_game(self, event: AstrMessageEvent):
+    """Start an interactive game"""
+    yield event.plain_result("Game started! Send your answer:")
+
+    @session_waiter(timeout=60, record_history_chains=False)
+    async def game_session(controller: SessionController, ev: AstrMessageEvent):
+        answer = ev.message_str.strip()
+
+        if answer == "quit":
+            await ev.send(ev.plain_result("Game ended"))
+            controller.stop()
+            return
+
+        if answer == "correct":
+            await ev.send(ev.plain_result("You win!"))
+            controller.stop()
+            return
+
+        await ev.send(ev.plain_result("Try again!"))
+        controller.keep(timeout=60, reset_timeout=True)
+
+    try:
+        await game_session(event)
+    except TimeoutError:
+        yield event.plain_result("Session timeout (60s)")
+    finally:
+        event.stop_event()
+```
+
+### Session Controller Methods
+
+| Method | Description |
+|--------|-------------|
+| `controller.stop()` | End the session |
+| `controller.keep(timeout=60, reset_timeout=True)` | Continue session with new timeout |
+| `controller.get_history_chains()` | Get message history |
+
+### User Isolation
+
+By default, sessions are isolated by `sender_id` - each user has their own session in group chats.
+
+### Smart Command Pattern (Recommended)
+
+Combine URL detection with session_waiter for streamlined UX:
+
+```python
+import re
+
+RE_URL = re.compile(r'https?://example\.com/\w+')
+
+@filter.command("fetch")
+async def fetch(self, event: AstrMessageEvent):
+    """Smart fetch: URL -> direct result, keyword -> search"""
+    msg = event.message_str.strip()
+
+    # No args: show help
+    if not msg:
+        yield event.plain_result("Usage: /fetch <url or keyword>")
+        return
+
+    # URL: direct fetch
+    if RE_URL.search(msg):
+        article = await fetch_article(msg)
+        yield event.plain_result(format_article(article))
+        return
+
+    # Keyword: search with session
+    result = await search(msg)
+    yield event.plain_result(format_results(result))
+
+    @session_waiter(timeout=60)
+    async def select_item(controller: SessionController, ev: AstrMessageEvent):
+        # Handle selection...
+        controller.stop()
+
+    await select_item(event)
+```
+
+**Benefits**:
+- 1 step for URL (direct result)
+- 2 steps for keyword (search → select)
+- No unnecessary menu navigation
+
+---
+
 ## Checklist
 
 - [ ] Import `filter` from `astrbot.api.event`

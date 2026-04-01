@@ -104,10 +104,16 @@ AstrBot provides standardized paths for plugin data:
 - **Access**: Use `get_astrbot_data_path()` utility
 
 ```python
+from pathlib import Path
 from astrbot.core.utils.astrbot_path import get_astrbot_data_path
 
 # Get plugin data directory
-plugin_data_path = get_astrbot_data_path() / "plugin_data" / self.name
+# Note: get_astrbot_data_path() returns string, wrap with Path
+plugin_data_path = Path(get_astrbot_data_path()) / "plugin_data" / self.name
+sessions_file = plugin_data_path / "sessions.json"
+
+# Ensure directory exists
+plugin_data_path.mkdir(parents=True, exist_ok=True)
 ```
 
 ---
@@ -142,21 +148,54 @@ my_plugin/
 ├── _conf_schema.json
 └── services/
     ├── __init__.py
-    ├── api_client.py      # External API calls
-    └── processor.py       # Data processing
+    ├── api_client.py      # External API calls (sync)
+    ├── api_client_async.py # External API calls (async, recommended)
+    ├── parser.py          # Data parsing
+    └── models.py          # Data models (dataclass)
 ```
 
 **main.py imports**:
 ```python
-from .services.api_client import APIClient
-from .services.processor import DataProcessor
+from .services.api_client_async import fetch_article, fetch_search_results
+from .services.models import Article, SearchResult
 
 @register("moderate_plugin", "Author", "Description", "1.0.0")
 class ModeratePlugin(Star):
     def __init__(self, context: Context, config: AstrBotConfig):
         super().__init__(context)
         self.api_client = APIClient(config.get("token"))
-        self.processor = DataProcessor()
+```
+
+**services/models.py** (Data Models):
+```python
+from dataclasses import dataclass, field
+from typing import Optional, List
+
+@dataclass
+class Article:
+    """文章数据模型"""
+    id: str
+    title: str
+    author: str
+    content: str
+    url: str
+    post_time: Optional[str] = None
+    view_count: int = 0
+    like_count: int = 0
+    feed_images: List[str] = field(default_factory=list)
+```
+
+**services/api_client_async.py** (Async API Client):
+```python
+import aiohttp
+from .models import Article
+
+async def fetch_article(url: str) -> Article:
+    """异步获取文章"""
+    async with aiohttp.ClientSession() as session:
+        async with session.get(url) as resp:
+            data = await resp.json()
+            return Article(**parse_data(data))
 ```
 
 ### Pattern 3: Complex Plugin (Full Structure)

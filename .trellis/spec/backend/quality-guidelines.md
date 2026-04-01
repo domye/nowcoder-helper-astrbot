@@ -119,6 +119,66 @@ async def terminate(self):
     self.background_task.cancel()
 ```
 
+### 5. Use aiohttp for HTTP Requests
+
+**CRITICAL**: Never use `requests` in async code. Use `aiohttp` or `httpx`.
+
+```python
+# ❌ WRONG: requests is blocking
+import requests
+
+async def fetch_data(self, url: str):
+    response = requests.get(url)  # Blocks the event loop!
+    return response.json()
+
+# ✅ CORRECT: aiohttp is async
+import aiohttp
+
+async def fetch_data(self, url: str) -> dict:
+    async with aiohttp.ClientSession() as session:
+        async with session.get(url) as resp:
+            return await resp.json()
+
+# ✅ CORRECT: Reuse session for multiple requests
+async def fetch_multiple(self, urls: list) -> list:
+    results = []
+    async with aiohttp.ClientSession() as session:
+        for url in urls:
+            async with session.get(url) as resp:
+                results.append(await resp.json())
+    return results
+```
+
+### 6. Use Dataclasses for Data Models
+
+```python
+from dataclasses import dataclass, field
+from typing import Optional, List
+
+@dataclass
+class Article:
+    """文章数据模型"""
+    id: str
+    title: str
+    author: str
+    content: str
+    url: str
+    post_time: Optional[str] = None
+    view_count: int = 0
+    like_count: int = 0
+    feed_images: List[str] = field(default_factory=list)
+
+# Usage
+article = Article(
+    id="123",
+    title="Title",
+    author="Author",
+    content="Content",
+    url="https://..."
+)
+print(article.title)  # Direct attribute access
+```
+
 ---
 
 ## Function Size Limits
