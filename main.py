@@ -92,10 +92,10 @@ class NowcoderHelperPlugin(Star):
         logger.info("Nowcoder Helper Plugin initialized")
 
     @filter.command("nowcoder")
-    async def nowcoder(self, event: AstrMessageEvent):
+    async def nowcoder(self, event: AstrMessageEvent, query: str = ""):
         """智能获取牛客文章。用法: /nowcoder <链接或关键词>"""
         sender_id = event.get_sender_id()
-        msg = event.message_str.strip()
+        msg = query.strip()
 
         # 检查是否有未完成的会话
         sessions = self._load_sessions()
