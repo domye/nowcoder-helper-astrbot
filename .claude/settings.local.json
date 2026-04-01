@@ -1,12 +1,18 @@
 {
-	"permissions": {
-		"allow": [
-			"mcp__context7__resolve-library-id",
-			"mcp__exa__web_search_exa",
-			"mcp__context7__query-docs",
-			"Bash(python:*)",
-			"WebFetch(domain:docs.astrbot.app)",
-			"Bash(cd:*)"
-		]
-	}
+  "permissions": {
+    "allow": [
+      "mcp__context7__resolve-library-id",
+      "mcp__exa__web_search_exa",
+      "mcp__context7__query-docs",
+      "Bash(python:*)",
+      "WebFetch(domain:docs.astrbot.app)",
+      "Bash(cd:*)",
+      "mcp__js-reverse__new_page",
+      "mcp__js-reverse__list_network_requests",
+      "mcp__js-reverse__navigate_page",
+      "mcp__js-reverse__evaluate_script",
+      "mcp__js-reverse__get_request_initiator",
+      "Bash(rtk find:*)"
+    ]
+  }
 }

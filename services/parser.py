@@ -205,7 +205,21 @@ def parse_search_api_data(data: dict, keyword: str, page: int) -> SearchResult:
         if not item_id:
             continue
 
-        article_type = 'feed' if src.get('uuid') else 'discuss'
+        # 判断文章类型：优先检查 momentType 字段，其次检查数据来源
+        moment_type = src.get('momentType')
+        if moment_type:
+            # momentType 字段明确指定类型
+            article_type = 'feed' if moment_type == 1 else 'discuss'
+        elif src.get('uuid'):
+            # 有 uuid 字段通常是 feed
+            article_type = 'feed'
+        elif rd.get('contentId'):
+            # 有 contentId 通常是 discuss
+            article_type = 'discuss'
+        else:
+            # 默认根据 id 长度判断：feed 的 uuid 较长（32位），discuss 的 id 较短（纯数字）
+            article_type = 'feed' if len(str(item_id)) > 15 else 'discuss'
+
         items.append(SearchResultItem(
             id=str(item_id), title=src.get('title') or f'文章-{item_id[:8]}',
             url='', article_type=article_type
