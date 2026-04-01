@@ -158,6 +158,13 @@ async def fetch_search_results(keyword: str, page: int = 1, log_id: str = None, 
         html, _ = await _request(session, 'GET', url, headers={'Accept': 'text/html'})
         result = parse_search_html(html, keyword, page)
 
+        # 调试：输出第一条和第二条搜索结果的HTML片段
+        print(f"\n=== DEBUG Search Results ===")
+        print(f"Total items parsed: {len(result.items)}")
+        if len(result.items) >= 2:
+            print(f"Item 1: id={result.items[0].id}, type={result.items[0].article_type}, title={result.items[0].title}")
+            print(f"Item 2: id={result.items[1].id}, type={result.items[1].article_type}, title={result.items[1].title}")
+
         match = RE_INITIAL_STATE.search(html)
         if match:
             state = match.group(1)
