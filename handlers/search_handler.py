@@ -164,19 +164,8 @@ async def handle_search_session(event: AstrMessageEvent, sender_id: str, session
 async def _handle_return(ev: AstrMessageEvent, controller: SessionController,
                          session: SearchSession, session_manager: SessionManager, sender_id: str):
     """处理返回搜索结果"""
-    try:
-        result = await fetch_search_results(
-            session.keyword, page=session.current_page,
-            log_id=session.log_id, session_id=session.session_id,
-            tag_type=session.tag_type, order=session.order
-        )
-        response = format_search_results(result, session.keyword, session.current_page,
-                                          session.tag_type, session.order)
-        await ev.send(ev.plain_result(response))
-        controller.keep(timeout=60, reset_timeout=True)
-    except Exception as e:
-        await ev.send(ev.plain_result(f"返回失败: {e}"))
-        controller.keep(timeout=60, reset_timeout=True)
+    await ev.send(ev.plain_result("已返回，输入编号查看其他文章"))
+    controller.keep(timeout=60, reset_timeout=True)
 
 
 async def _handle_next_page(ev: AstrMessageEvent, controller: SessionController,
@@ -261,5 +250,4 @@ async def _handle_select_article(ev: AstrMessageEvent, controller: SessionContro
     else:
         await ev.send(ev.plain_result(text))
 
-    await ev.send(ev.plain_result("输入'返回'继续查看其他文章，或'退出'结束"))
     controller.keep(timeout=60, reset_timeout=True)
