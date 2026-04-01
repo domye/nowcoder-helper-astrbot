@@ -196,16 +196,22 @@ def parse_search_api_data(data: dict, keyword: str, page: int) -> SearchResult:
     items = []
     data_obj = data.get('data', {})
 
-    for idx, r in enumerate(data_obj.get('records', [])):
+    records = data_obj.get('records', [])
+    logger.info(f"API返回记录数: {len(records)}")
+
+    for idx, r in enumerate(records):
         if not isinstance(r, dict):
+            logger.info(f"Record {idx} 不是dict")
             continue
         rd = r.get('data', {})
         if not isinstance(rd, dict):
+            logger.info(f"Record {idx} data不是dict")
             continue
 
         # 优先使用 contentData，它包含正确的ID
         content_data = rd.get('contentData')
         if not isinstance(content_data, dict):
+            logger.info(f"Record {idx} contentData不是dict或不存在，keys: {list(rd.keys())}")
             continue
 
         # 根据 contentType 判断文章类型
@@ -221,17 +227,20 @@ def parse_search_api_data(data: dict, keyword: str, page: int) -> SearchResult:
             article_type = 'feed'
 
         if not item_id:
+            logger.info(f"Record {idx} item_id为空")
             continue
 
         title = content_data.get('title') or f'文章-{str(item_id)[:8]}'
 
-        if idx < 3:  # 输出前3条用于调试
+        if idx < 5:  # 输出前5条用于调试
             logger.info(f"API Item {idx}: id={item_id}, type={article_type}, contentType={content_type}, title={title}")
 
         items.append(SearchResultItem(
             id=str(item_id), title=title,
             url='', article_type=article_type
         ))
+
+    logger.info(f"API解析成功条数: {len(items)}")
 
     total = data_obj.get('total', 0)
     pages = data_obj.get('totalPage', 0) or ((total + 19) // 20 if total else 0)
