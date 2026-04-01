@@ -185,6 +185,7 @@ def parse_search_html(html: str, keyword: str, page: int) -> SearchResult:
 
 def parse_search_api_data(data: dict, keyword: str, page: int) -> SearchResult:
     """从搜索API响应提取结果"""
+    import logging
     items = []
     data_obj = data.get('data', {})
 
@@ -201,8 +202,22 @@ def parse_search_api_data(data: dict, keyword: str, page: int) -> SearchResult:
         if not src:
             continue
 
-        item_id = src.get('uuid') or str(src.get('id', '')) or str(rd.get('contentId', ''))
+        # 尝试多个可能的ID字段
+        # 1. subjectId / discussId (discuss类型)
+        # 2. uuid (feed类型)
+        # 3. id / contentId (其他情况)
+        possible_ids = [
+            src.get('subjectId'),
+            src.get('discussId'),
+            src.get('uuid'),
+            str(src.get('id', '')),
+            str(rd.get('contentId', '')),
+        ]
+
+        # 过滤掉空值，取第一个有效的
+        item_id = next((id for id in possible_ids if id), None)
         if not item_id:
+            logging.warning(f"No valid ID found in record: {rd.keys()}")
             continue
 
         # 判断文章类型：feed 的 id 包含字母（十六进制），discuss 的 id 是纯数字
