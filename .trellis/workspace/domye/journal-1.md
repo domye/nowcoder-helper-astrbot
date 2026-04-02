@@ -176,3 +176,36 @@ Completed the bootstrap task to fill in project development guidelines for AI ag
 
 - Run `/trellis:finish-work` before commit
 - Archive task with `python3 ./.trellis/scripts/task.py archive 00-bootstrap-guidelines`
+
+
+## Session 4: Bootstrap Guidelines - 填充项目开发指南
+
+**Date**: 2026-04-02
+**Task**: Bootstrap Guidelines - 填充项目开发指南
+**Branch**: `master`
+
+### Summary
+
+(Add summary)
+
+### Main Changes
+
+(Add details)
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `27f4a88` | (see git log) |
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete
